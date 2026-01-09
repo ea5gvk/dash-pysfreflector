@@ -198,15 +198,113 @@ sudo certbot --nginx -d tu-dominio.com
 
 ## Integración con pYSF3 Reflector
 
-El dashboard lee datos del archivo JSON generado por el script `collector3.py` del reflector pYSF3.
+El dashboard lee datos de la base de datos SQLite generada por el script `collector3.py` del reflector pYSF3.
+
+### Funcionamiento de collector3.py
+
+El script `collector3.py`:
+1. Se conecta al reflector pYSF3 vía UDP (puerto 42223 por defecto)
+2. Recibe datos JSON en tiempo real del reflector
+3. Almacena toda la información en una base de datos SQLite
 
 ### Configuración del collector
 
-El script `collector3.py` debe generar un archivo `dashboard_data.json` que el frontend consumirá.
+Editar las variables al inicio de `collector3.py`:
 
-Ruta típica del archivo de datos:
+```python
+# Dirección y puerto del reflector pYSF3 (sección Json en pysfreflector.ini)
+srv_addr_port = ('127.0.0.1', 42223)
+
+# Ruta de la base de datos SQLite
+db = r'/opt/pysfreflector/collector3.db'
+
+# Mostrar streams bloqueados en el dashboard
+show_TB = True
+
+# Links especiales (descripción:serial)
+ser_lnks = {"BM_2222":"E0C4W", "XLX-Link":"G0gBJ", "BlueDV":"F5ZFW"}
+
+# Descripciones de DGID
+gid_desc = { "9":"Local_reflector", "22":"MP_Italia", ... }
 ```
-/var/www/html/dashboard_data.json
+
+### Estructura de la base de datos
+
+El collector crea las siguientes tablas en SQLite:
+
+- **streams**: Historial de transmisiones (callsign, gateway, DGID, radio, coordenadas, etc.)
+- **reflector**: Información del reflector (ID, nombre, descripción, APRS, etc.)
+- **connected**: Gateways conectados actualmente
+- **blocked**: Callsigns bloqueados por reglas
+
+### Ruta típica de la base de datos
+```
+/opt/pysfreflector/collector3.db
+```
+
+### API para el Dashboard
+
+Para que el dashboard pueda leer los datos, necesitas un endpoint API que:
+1. Lea la base de datos SQLite
+2. Devuelva los datos en formato JSON
+
+Ejemplo de script PHP simple (`api.php`):
+```php
+<?php
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+
+$db = new SQLite3('/opt/pysfreflector/collector3.db');
+
+$streams = $db->query('SELECT * FROM streams ORDER BY date_time DESC LIMIT 100');
+$reflector = $db->query('SELECT * FROM reflector LIMIT 1');
+$connected = $db->query('SELECT * FROM connected');
+
+$data = [
+    'streams' => [],
+    'reflector' => null,
+    'connected' => []
+];
+
+while ($row = $streams->fetchArray(SQLITE3_ASSOC)) {
+    $data['streams'][] = $row;
+}
+
+$data['reflector'] = $reflector->fetchArray(SQLITE3_ASSOC);
+
+while ($row = $connected->fetchArray(SQLITE3_ASSOC)) {
+    $data['connected'][] = $row;
+}
+
+echo json_encode($data);
+?>
+```
+
+O con Python/Flask:
+```python
+from flask import Flask, jsonify
+import sqlite3
+
+app = Flask(__name__)
+DB_PATH = '/opt/pysfreflector/collector3.db'
+
+@app.route('/api/dashboard')
+def get_dashboard_data():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    
+    streams = conn.execute('SELECT * FROM streams ORDER BY date_time DESC LIMIT 100').fetchall()
+    reflector = conn.execute('SELECT * FROM reflector LIMIT 1').fetchone()
+    connected = conn.execute('SELECT * FROM connected').fetchall()
+    
+    return jsonify({
+        'streams': [dict(row) for row in streams],
+        'reflector': dict(reflector) if reflector else None,
+        'connected': [dict(row) for row in connected]
+    })
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5001)
 ```
 
 ## Estructura del Proyecto
