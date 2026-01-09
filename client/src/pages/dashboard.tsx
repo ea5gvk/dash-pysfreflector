@@ -22,6 +22,7 @@ import {
   Zap
 } from 'lucide-react';
 import { getFlagEmoji, getCountryName } from '@/lib/callsignFlags';
+import adnLogo from '@assets/ADN_Systems_EA_logo_transparente_1767983339225.png';
 
 type RadioType = 'handheld' | 'mobile' | 'base' | 'bridge' | 'unknown';
 
@@ -424,16 +425,19 @@ export default function Dashboard() {
           <div className="flex items-center justify-between h-16 sm:h-20">
             <div className="flex items-center gap-3 sm:gap-4">
               <div className="relative">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center glow-primary">
-                  <Radio className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                </div>
+                <img 
+                  src={adnLogo} 
+                  alt="ADN Systems Spain" 
+                  className="h-10 sm:h-14 w-auto object-contain"
+                  data-testid="header-logo"
+                />
                 <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse border-2 border-background" />
               </div>
-              <div>
+              <div className="hidden sm:block">
                 <h1 className="font-display text-lg sm:text-xl font-bold text-gradient">
                   pYSF3 Reflector
                 </h1>
-                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   C4FM Multi Streams • #{reflectorInfo.REF_ID}
                 </p>
               </div>
