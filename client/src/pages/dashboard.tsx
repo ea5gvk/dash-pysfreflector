@@ -14,9 +14,112 @@ import {
   X,
   ExternalLink,
   Mail,
-  ChevronDown
+  ChevronDown,
+  Smartphone,
+  Car,
+  Monitor,
+  Link2,
+  Zap
 } from 'lucide-react';
 import { getFlagEmoji, getCountryName } from '@/lib/callsignFlags';
+
+type RadioType = 'handheld' | 'mobile' | 'base' | 'bridge' | 'unknown';
+
+interface RadioInfo {
+  type: RadioType;
+  icon: typeof Smartphone;
+  color: string;
+  bgColor: string;
+  label: string;
+}
+
+function getRadioInfo(radioCode: string): RadioInfo {
+  const code = radioCode.toUpperCase().replace(/[-\s]/g, '');
+  
+  const handhelds = ['FT70D', 'FT3D', 'FT2D', 'FT5D', 'FT1XD', 'FT1D'];
+  const mobiles = ['FTM400', 'FTM300', 'FTM300D', 'FTM500', 'FTM500D', 'FTM200', 'FTM100', 'FTM510', 'FTM310', 'FT7250', 'FT3207', 'FTM3200'];
+  const bases = ['FT991', 'FT991A', 'FT897', 'FT857', 'FTDX10', 'FTDX101'];
+  const bridges = ['BM', 'XLX', 'BLUEDV', 'MMDVM', 'DVMEGA', 'OPENSPOT', 'HOTSPOT'];
+  
+  if (handhelds.some(h => code.includes(h))) {
+    return {
+      type: 'handheld',
+      icon: Smartphone,
+      color: 'text-emerald-400',
+      bgColor: 'bg-emerald-500/20',
+      label: 'Handheld'
+    };
+  }
+  
+  if (mobiles.some(m => code.includes(m))) {
+    return {
+      type: 'mobile',
+      icon: Car,
+      color: 'text-blue-400',
+      bgColor: 'bg-blue-500/20',
+      label: 'Mobile'
+    };
+  }
+  
+  if (bases.some(b => code.includes(b))) {
+    return {
+      type: 'base',
+      icon: Monitor,
+      color: 'text-purple-400',
+      bgColor: 'bg-purple-500/20',
+      label: 'Base Station'
+    };
+  }
+  
+  if (bridges.some(br => code.includes(br))) {
+    return {
+      type: 'bridge',
+      icon: Link2,
+      color: 'text-orange-400',
+      bgColor: 'bg-orange-500/20',
+      label: 'Bridge/Link'
+    };
+  }
+  
+  return {
+    type: 'unknown',
+    icon: Radio,
+    color: 'text-gray-400',
+    bgColor: 'bg-gray-500/20',
+    label: 'Radio'
+  };
+}
+
+function RadioBadge({ radioCode }: { radioCode: string }) {
+  const info = getRadioInfo(radioCode);
+  const Icon = info.icon;
+  
+  return (
+    <div className="flex items-center gap-2">
+      <div className={`p-1.5 rounded-lg ${info.bgColor}`}>
+        <Icon className={`w-4 h-4 ${info.color}`} />
+      </div>
+      <div className="flex flex-col">
+        <span className="font-mono text-sm font-medium">{radioCode}</span>
+        <span className={`text-[10px] ${info.color}`}>{info.label}</span>
+      </div>
+    </div>
+  );
+}
+
+function RadioBadgeCompact({ radioCode }: { radioCode: string }) {
+  const info = getRadioInfo(radioCode);
+  const Icon = info.icon;
+  
+  return (
+    <div className="flex items-center gap-1.5" title={info.label}>
+      <div className={`p-1 rounded ${info.bgColor}`}>
+        <Icon className={`w-3.5 h-3.5 ${info.color}`} />
+      </div>
+      <span className="font-mono text-sm">{radioCode}</span>
+    </div>
+  );
+}
 
 type TabType = 'qso' | 'linked' | 'blocked';
 
@@ -74,6 +177,8 @@ const mockQSOData: QSOStream[] = [
   { id: 6, status: 'TB', dgid: '00', call: 'JA1XYZ', gw: 'JA1XYZ-ND', gid_desc: 'Main Stream', radio_code: 'FT-5D', radio_id: '44444', target: 'ALL', SQC: '06', stream_id: 'P6Q7R8', DT: 'DN', CM: 'GROUP', FT: '5/5', Dev: '1.9', time: '14:27:11' },
   { id: 7, status: 'RX', dgid: '00', call: 'F5ABC', gw: 'F5ABC-ND', gid_desc: 'Main Stream', radio_code: 'FTM-500D', radio_id: '55555', target: 'ALL', SQC: '07', stream_id: 'S9T0U1', DT: 'VW', CM: 'GROUP', FT: '2/5', Dev: '2.2', time: '14:26:44' },
   { id: 8, status: 'TX', dgid: '03', call: 'VK2ABC', gw: 'VK2ABC-ND', gid_desc: 'Oceania', radio_code: 'FT-70D', radio_id: '66666', target: 'VK', SQC: '08', stream_id: 'V2W3X4', DT: 'VW', CM: 'GROUP', FT: '1/5', Dev: '1.7', time: '14:25:20', latitude: '-33.8688', longitude: '151.2093' },
+  { id: 9, status: 'RX', dgid: '00', call: 'G4ABC', gw: 'G4ABC-ND', gid_desc: 'Main Stream', radio_code: 'BM_2222', radio_id: 'E0C4W', target: 'ALL', SQC: '09', stream_id: 'W5X6Y7', DT: 'VW', CM: 'GROUP', FT: '2/5', Dev: '1.6', time: '14:24:05' },
+  { id: 10, status: 'TX', dgid: '01', call: 'ON4ABC', gw: 'ON4ABC-ND', gid_desc: 'Belgium Net', radio_code: 'FTM-200', radio_id: '77777', target: 'ALL', SQC: '10', stream_id: 'Z8A9B0', DT: 'VW', CM: 'GROUP', FT: '1/5', Dev: '2.3', time: '14:23:18', latitude: '50.8503', longitude: '4.3517' },
 ];
 
 const mockLinkedData: LinkedStation[] = [
@@ -178,7 +283,12 @@ function MobileCard({ stream }: { stream: QSOStream }) {
           >
             <div className="grid grid-cols-2 gap-2 text-sm pt-2 border-t border-border/30">
               <div><span className="text-muted-foreground">Gateway:</span> {stream.gw}</div>
-              <div><span className="text-muted-foreground">Radio:</span> {stream.radio_code}</div>
+              <div className="col-span-2">
+                <span className="text-muted-foreground">Radio:</span>
+                <div className="mt-1">
+                  <RadioBadgeCompact radioCode={stream.radio_code} />
+                </div>
+              </div>
               <div><span className="text-muted-foreground">Target:</span> {stream.target}</div>
               <div><span className="text-muted-foreground">Mode:</span> {stream.CM}</div>
               <div><span className="text-muted-foreground">Frame:</span> {stream.FT}</div>
@@ -470,7 +580,9 @@ export default function Dashboard() {
                         </td>
                         <td className="py-3 px-4 font-mono text-sm">{stream.gw}</td>
                         <td className="py-3 px-4 text-sm">{stream.gid_desc}</td>
-                        <td className="py-3 px-4 text-sm">{stream.radio_code}</td>
+                        <td className="py-3 px-4">
+                          <RadioBadge radioCode={stream.radio_code} />
+                        </td>
                         <td className="py-3 px-4 text-sm">{stream.CM}</td>
                         <td className="py-3 px-4 font-mono text-sm text-muted-foreground">{stream.time}</td>
                         <td className="py-3 px-4">
