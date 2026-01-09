@@ -124,101 +124,138 @@ function RadioBadgeCompact({ radioCode }: { radioCode: string }) {
 
 type TabType = 'qso' | 'linked' | 'blocked';
 
+// API Configuration - Change this URL to point to your collector3.py API endpoint
+const API_URL = '/api/dashboard'; // Example: 'http://your-server:5001/api/dashboard'
+const USE_MOCK_DATA = true; // Set to false when connecting to real API
+
+// Interfaces matching collector3.py SQLite schema exactly
 interface QSOStream {
-  id: number;
-  status: 'TX' | 'TO' | 'TD' | 'WD' | 'TB' | 'RX';
-  dgid: string;
-  call: string;
-  gw: string;
-  gid_desc: string;
-  radio_code: string;
-  radio_id: string;
-  target: string;
-  SQC: string;
+  status: 'TX' | 'TC' | 'TO' | 'TD' | 'WD' | 'TB';
   stream_id: string;
-  DT: string;
+  call: string;
+  target: string;
+  gw: string;
+  dgid: string;
+  gid_desc: string;
+  time: string;
+  CS: string;
   CM: string;
   FT: string;
   Dev: string;
-  time: string;
-  latitude?: string;
-  longitude?: string;
+  MR: string;
+  VoIP: string;
+  DT: string;
+  SQL: string;
+  SQC: string;
+  latitude: string;
+  longitude: string;
+  aprs: string;
+  radio_code: string;
+  station_id: string;
+  radio_id: string;
+  dst: string;
+  src: string;
+  uplink: string;
+  downlink: string;
+  downlink_id: string;
+  uplink_id: string;
+  date_time: string;
 }
 
 interface LinkedStation {
-  id: number;
+  linked: string;
   call: string;
-  DGID: string;
   IP: string;
   port: string;
   TC: string;
   CF: string;
   LO: string;
   LK: string;
+  DGID: string;
   T_HOLD: string;
   BTH_DGID: string;
-  BTH_TOUT: number;
-  BTH_TCORR: number;
+  BTH_TOUT: string;
+  BTH_TCORR: string;
 }
 
 interface BlockedStation {
-  id: number;
-  call: string;
   time: string;
+  call: string;
   BR: string;
   TR: string;
 }
 
+interface ReflectorInfo {
+  system: string;
+  ver: string;
+  REF_ID: string;
+  REF_NAME: string;
+  REF_DESC: string;
+  date_time: string;
+  APRS_EN: string;
+  APRS_SSID: string;
+  contact: string;
+  web: string;
+  dgid_loc: string;
+  dgid_def: string;
+  dgid_list: string;
+}
+
+// Mock data matching collector3.py SQLite schema
 const mockQSOData: QSOStream[] = [
-  { id: 1, status: 'TX', dgid: '00', call: 'IU5JAE', gw: 'IU5JAE-ND', gid_desc: 'Main Stream', radio_code: 'FT-70D', radio_id: '12345', target: 'ALL', SQC: '01', stream_id: 'A1B2C3', DT: 'VW', CM: 'GROUP', FT: '1/5', Dev: '2.1', time: '14:32:15', latitude: '43.7696', longitude: '11.2558' },
-  { id: 2, status: 'RX', dgid: '00', call: 'IK5XMK', gw: 'IK5XMK-ND', gid_desc: 'Main Stream', radio_code: 'FTM-400', radio_id: '67890', target: 'ALL', SQC: '02', stream_id: 'D4E5F6', DT: 'VW', CM: 'GROUP', FT: '2/5', Dev: '1.8', time: '14:31:45' },
-  { id: 3, status: 'TD', dgid: '01', call: 'EA4GPZ', gw: 'EA4GPZ-ND', gid_desc: 'Spain Link', radio_code: 'FT-991A', radio_id: '11111', target: 'ALL', SQC: '03', stream_id: 'G7H8I9', DT: 'DN', CM: 'GROUP', FT: '5/5', Dev: '2.4', time: '14:30:22' },
-  { id: 4, status: 'TO', dgid: '00', call: 'W1ABC', gw: 'W1ABC-ND', gid_desc: 'Main Stream', radio_code: 'FT-3D', radio_id: '22222', target: 'ALL', SQC: '04', stream_id: 'J0K1L2', DT: 'VW', CM: 'GROUP', FT: '3/5', Dev: '1.5', time: '14:29:58', latitude: '42.3601', longitude: '-71.0589' },
-  { id: 5, status: 'WD', dgid: '02', call: 'DL1ABC', gw: 'DL1ABC-ND', gid_desc: 'Germany Net', radio_code: 'FTM-300D', radio_id: '33333', target: 'DL', SQC: '05', stream_id: 'M3N4O5', DT: 'VW', CM: 'GROUP', FT: '4/5', Dev: '2.0', time: '14:28:33' },
-  { id: 6, status: 'TB', dgid: '00', call: 'JA1XYZ', gw: 'JA1XYZ-ND', gid_desc: 'Main Stream', radio_code: 'FT-5D', radio_id: '44444', target: 'ALL', SQC: '06', stream_id: 'P6Q7R8', DT: 'DN', CM: 'GROUP', FT: '5/5', Dev: '1.9', time: '14:27:11' },
-  { id: 7, status: 'RX', dgid: '00', call: 'F5ABC', gw: 'F5ABC-ND', gid_desc: 'Main Stream', radio_code: 'FTM-500D', radio_id: '55555', target: 'ALL', SQC: '07', stream_id: 'S9T0U1', DT: 'VW', CM: 'GROUP', FT: '2/5', Dev: '2.2', time: '14:26:44' },
-  { id: 8, status: 'TX', dgid: '03', call: 'VK2ABC', gw: 'VK2ABC-ND', gid_desc: 'Oceania', radio_code: 'FT-70D', radio_id: '66666', target: 'VK', SQC: '08', stream_id: 'V2W3X4', DT: 'VW', CM: 'GROUP', FT: '1/5', Dev: '1.7', time: '14:25:20', latitude: '-33.8688', longitude: '151.2093' },
-  { id: 9, status: 'RX', dgid: '00', call: 'G4ABC', gw: 'G4ABC-ND', gid_desc: 'Main Stream', radio_code: 'BM_2222', radio_id: 'E0C4W', target: 'ALL', SQC: '09', stream_id: 'W5X6Y7', DT: 'VW', CM: 'GROUP', FT: '2/5', Dev: '1.6', time: '14:24:05' },
-  { id: 10, status: 'TX', dgid: '01', call: 'ON4ABC', gw: 'ON4ABC-ND', gid_desc: 'Belgium Net', radio_code: 'FTM-200', radio_id: '77777', target: 'ALL', SQC: '10', stream_id: 'Z8A9B0', DT: 'VW', CM: 'GROUP', FT: '1/5', Dev: '2.3', time: '14:23:18', latitude: '50.8503', longitude: '4.3517' },
+  { status: 'TX', stream_id: 'A1B2C3D4', call: 'IU5JAE', target: 'ALL', gw: 'IU5JAE-ND', dgid: '9', gid_desc: 'Local_reflector', time: '14:32:15(00:45)', CS: 'IU5JAE', CM: 'Group/CQ', FT: 'VW', Dev: 'Wide', MR: '0', VoIP: '0', DT: 'V/D mode 1', SQL: '0', SQC: '01', latitude: '43.769600', longitude: '11.255800', aprs: 'https://aprs.fi/IU5JAE-Y', radio_code: 'FT-70D', station_id: 'ABCDE', radio_id: '12345', dst: '', src: '', uplink: '', downlink: '', downlink_id: '', uplink_id: '', date_time: '2026-01-09 14:32:15' },
+  { status: 'TC', stream_id: 'D4E5F6G7', call: 'IK5XMK', target: 'ALL', gw: 'IK5XMK-ND', dgid: '9', gid_desc: 'Local_reflector', time: '14:31:45(01:23)', CS: 'IK5XMK', CM: 'Group/CQ', FT: 'VW', Dev: 'Wide', MR: '0', VoIP: '0', DT: 'V/D mode 1', SQL: '0', SQC: '02', latitude: '', longitude: '', aprs: 'https://aprs.fi/IK5XMK-Y', radio_code: 'FTM400', station_id: 'FGHIJ', radio_id: '67890', dst: '', src: '', uplink: '', downlink: '', downlink_id: '', uplink_id: '', date_time: '2026-01-09 14:31:45' },
+  { status: 'TD', stream_id: 'G7H8I9J0', call: 'EA4GPZ', target: 'ALL', gw: 'EA4GPZ-ND', dgid: '22', gid_desc: 'MP_Italia', time: '14:30:22(00:58)', CS: 'EA4GPZ', CM: 'Group/CQ', FT: 'DN', Dev: 'Narrow', MR: '0', VoIP: '0', DT: 'Voice FR', SQL: '0', SQC: '03', latitude: '40.416700', longitude: '-3.703790', aprs: 'https://aprs.fi/EA4GPZ-Y', radio_code: 'FT-991', station_id: 'KLMNO', radio_id: '11111', dst: '', src: '', uplink: '', downlink: '', downlink_id: '', uplink_id: '', date_time: '2026-01-09 14:30:22' },
+  { status: 'TO', stream_id: 'J0K1L2M3', call: 'W1ABC', target: 'ALL', gw: 'W1ABC-ND', dgid: '9', gid_desc: 'Local_reflector', time: '14:29:58(05:00)', CS: 'W1ABC', CM: 'Group/CQ', FT: 'VW', Dev: 'Wide', MR: '0', VoIP: '0', DT: 'V/D mode 1', SQL: '0', SQC: '04', latitude: '42.360100', longitude: '-71.05890', aprs: 'https://aprs.fi/W1ABC-Y', radio_code: 'FT- 3D', station_id: 'PQRST', radio_id: '22222', dst: '', src: '', uplink: '', downlink: '', downlink_id: '', uplink_id: '', date_time: '2026-01-09 14:29:58' },
+  { status: 'WD', stream_id: 'M3N4O5P6', call: 'DL1ABC', target: 'DL', gw: 'DL1ABC-ND', dgid: '30', gid_desc: 'MP_Lazio', time: '14:28:33(02:15)', CS: 'DL1ABC', CM: 'Group/CQ', FT: 'VW', Dev: 'Wide', MR: '0', VoIP: '0', DT: 'V/D mode 1', SQL: '0', SQC: '05', latitude: '52.520000', longitude: '13.405000', aprs: 'https://aprs.fi/DL1ABC-Y', radio_code: 'FTM300', station_id: 'UVWXY', radio_id: '33333', dst: '', src: '', uplink: '', downlink: '', downlink_id: '', uplink_id: '', date_time: '2026-01-09 14:28:33' },
+  { status: 'TB', stream_id: 'P6Q7R8S9', call: 'JA1XYZ', target: 'ALL', gw: 'JA1XYZ-ND', dgid: '9', gid_desc: 'Local_reflector', time: '14:27:11', CS: 'JA1XYZ', CM: 'Group/CQ', FT: 'DN', Dev: 'Narrow', MR: '0', VoIP: '0', DT: 'Voice FR', SQL: '0', SQC: '06', latitude: '', longitude: '', aprs: '', radio_code: 'FT- 5D', station_id: 'ZABCD', radio_id: '44444', dst: '', src: '', uplink: '', downlink: '', downlink_id: '', uplink_id: '', date_time: '2026-01-09 14:27:11' },
+  { status: 'TC', stream_id: 'S9T0U1V2', call: 'F5ABC', target: 'ALL', gw: 'F5ABC-ND', dgid: '9', gid_desc: 'Local_reflector', time: '14:26:44(00:32)', CS: 'F5ABC', CM: 'Group/CQ', FT: 'VW', Dev: 'Wide', MR: '0', VoIP: '0', DT: 'V/D mode 1', SQL: '0', SQC: '07', latitude: '48.856600', longitude: '2.3522000', aprs: 'https://aprs.fi/F5ABC-Y', radio_code: 'FTM500', station_id: 'EFGHI', radio_id: '55555', dst: '', src: '', uplink: '', downlink: '', downlink_id: '', uplink_id: '', date_time: '2026-01-09 14:26:44' },
+  { status: 'TX', stream_id: 'V2W3X4Y5', call: 'VK2ABC', target: 'VK', gw: 'VK2ABC-ND', dgid: '40', gid_desc: 'MP_Emilia R.', time: '14:25:20', CS: 'VK2ABC', CM: 'Group/CQ', FT: 'VW', Dev: 'Wide', MR: '0', VoIP: '0', DT: 'V/D mode 1', SQL: '0', SQC: '08', latitude: '-33.86880', longitude: '151.20930', aprs: 'https://aprs.fi/VK2ABC-Y', radio_code: 'FT-70D', station_id: 'JKLMN', radio_id: '66666', dst: '', src: '', uplink: '', downlink: '', downlink_id: '', uplink_id: '', date_time: '2026-01-09 14:25:20' },
+  { status: 'TC', stream_id: 'W5X6Y7Z8', call: 'G4ABC', target: 'ALL', gw: 'G4ABC-ND', dgid: '9', gid_desc: 'Local_reflector', time: '14:24:05(00:28)', CS: 'G4ABC', CM: 'Group/CQ', FT: 'VW', Dev: 'Wide', MR: '0', VoIP: '0', DT: 'V/D mode 1', SQL: '0', SQC: '09', latitude: '51.507400', longitude: '-0.127800', aprs: 'https://aprs.fi/G4ABC-Y', radio_code: 'BM_2222', station_id: 'OPQRS', radio_id: 'E0C4W', dst: '', src: '', uplink: '', downlink: '', downlink_id: '', uplink_id: '', date_time: '2026-01-09 14:24:05' },
+  { status: 'TX', stream_id: 'Z8A9B0C1', call: 'ON4ABC', target: 'ALL', gw: 'ON4ABC-ND', dgid: '41', gid_desc: 'MP_Toscana', time: '14:23:18', CS: 'ON4ABC', CM: 'Group/CQ', FT: 'VW', Dev: 'Wide', MR: '0', VoIP: '0', DT: 'V/D mode 1', SQL: '0', SQC: '10', latitude: '50.850300', longitude: '4.3517000', aprs: 'https://aprs.fi/ON4ABC-Y', radio_code: 'FTM200', station_id: 'TUVWX', radio_id: '77777', dst: '', src: '', uplink: '', downlink: '', downlink_id: '', uplink_id: '', date_time: '2026-01-09 14:23:18' },
 ];
 
 const mockLinkedData: LinkedStation[] = [
-  { id: 1, call: 'IU5JAE-RPT', DGID: '00 (Main)', IP: '192.168.1.100', port: '42000', TC: '58', CF: '2024-01-09 10:00:00', LO: 'N', LK: 'N', T_HOLD: 'IDLE', BTH_DGID: '00', BTH_TOUT: 300, BTH_TCORR: 120 },
-  { id: 2, call: 'IK5XMK-HS', DGID: '00 (Main)', IP: '192.168.1.101', port: '42001', TC: '45', CF: '2024-01-09 09:30:00', LO: 'N', LK: 'N', T_HOLD: 'IDLE', BTH_DGID: '00', BTH_TOUT: 300, BTH_TCORR: 200 },
-  { id: 3, call: 'EA4GPZ-BR', DGID: '01 (Spain)', IP: '10.0.0.50', port: '42002', TC: '60', CF: '2024-01-09 08:15:00', LO: 'N', LK: 'Y', T_HOLD: 'ACTIVE', BTH_DGID: '01', BTH_TOUT: 600, BTH_TCORR: 450 },
-  { id: 4, call: 'W1ABC-HS', DGID: '00 (Main)', IP: '172.16.0.25', port: '42003', TC: '32', CF: '2024-01-09 07:45:00', LO: 'Y', LK: 'N', T_HOLD: 'IDLE', BTH_DGID: '00', BTH_TOUT: 300, BTH_TCORR: 280 },
-  { id: 5, call: 'DL1ABC-RPT', DGID: '02 (Germany)', IP: '192.168.2.100', port: '42004', TC: '55', CF: '2024-01-09 06:00:00', LO: 'N', LK: 'N', T_HOLD: 'TX', BTH_DGID: '02', BTH_TOUT: 450, BTH_TCORR: 100 },
-  { id: 6, call: 'VK2ABC-HS', DGID: '03 (Oceania)', IP: '10.10.10.10', port: '42005', TC: '28', CF: '2024-01-09 05:30:00', LO: 'N', LK: 'N', T_HOLD: 'IDLE', BTH_DGID: '03', BTH_TOUT: 300, BTH_TCORR: 290 },
+  { linked: '1', call: 'IU5JAE-RPT', IP: '192.168.1.***', port: '42000', TC: '58', CF: '1', LO: 'N', LK: 'N', DGID: '9', T_HOLD: 'IDLE', BTH_DGID: '9', BTH_TOUT: '300', BTH_TCORR: '120' },
+  { linked: '1', call: 'IK5XMK-HS', IP: '192.168.1.***', port: '42001', TC: '45', CF: '1', LO: 'N', LK: 'N', DGID: '9', T_HOLD: 'IDLE', BTH_DGID: '9', BTH_TOUT: '300', BTH_TCORR: '200' },
+  { linked: '1', call: 'EA4GPZ-BR', IP: '10.0.0.***', port: '42002', TC: '60', CF: '1', LO: 'N', LK: 'Y', DGID: '22', T_HOLD: 'ACTIVE', BTH_DGID: '22', BTH_TOUT: '600', BTH_TCORR: '450' },
+  { linked: '1', call: 'W1ABC-HS', IP: '172.16.0.***', port: '42003', TC: '32', CF: '1', LO: 'Y', LK: 'N', DGID: '9', T_HOLD: 'IDLE', BTH_DGID: '9', BTH_TOUT: '300', BTH_TCORR: '280' },
+  { linked: '1', call: 'DL1ABC-RPT', IP: '192.168.2.***', port: '42004', TC: '55', CF: '1', LO: 'N', LK: 'N', DGID: '30', T_HOLD: 'TX', BTH_DGID: '30', BTH_TOUT: '450', BTH_TCORR: '100' },
+  { linked: '1', call: 'VK2ABC-HS', IP: '10.10.10.***', port: '42005', TC: '28', CF: '1', LO: 'N', LK: 'N', DGID: '40', T_HOLD: 'IDLE', BTH_DGID: '40', BTH_TOUT: '300', BTH_TCORR: '290' },
 ];
 
 const mockBlockedData: BlockedStation[] = [
-  { id: 1, call: 'XX1TST', time: '2024-01-08 15:30:00', BR: 'Spam transmission', TR: '2024-01-09 15:30:00' },
-  { id: 2, call: 'YY2BAD', time: '2024-01-07 12:00:00', BR: 'Invalid callsign', TR: '2024-01-08 12:00:00' },
+  { call: 'XX1TST', time: '2026-01-08 15:30:00', BR: 'CS', TR: 'Invalid suffix' },
+  { call: 'YY2BAD', time: '2026-01-07 12:00:00', BR: 'CS', TR: 'Invalid callsign format' },
 ];
 
-const reflectorInfo = {
-  REF_ID: '2222',
+const mockReflectorInfo: ReflectorInfo = {
+  system: 'pYSF3',
   ver: '3.2.1',
-  REF_DESC: 'Gruppo Radio Firenze C4FM Reflector',
-  APRS_EN: 'Yes',
-  dgid_list: '00,01,02,03',
-  dgid_def: '00',
-  dgid_loc: '00',
-  web: 'www.grupporadiofirenze.net',
-  contact: 'info@grupporadiofirenze.net'
+  REF_ID: '2222',
+  REF_NAME: 'ADN-SPAIN',
+  REF_DESC: 'ADN Systems Spain C4FM Reflector',
+  date_time: '2026-01-09 08:00:00',
+  APRS_EN: '1',
+  APRS_SSID: '-Y',
+  contact: 'info@adnsystems.es',
+  web: 'www.adnsystems.es',
+  dgid_loc: '9',
+  dgid_def: '9',
+  dgid_list: '9,22,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49'
 };
 
 function StatusBadge({ status }: { status: string }) {
   const statusConfig: Record<string, { bg: string; text: string; glow: string; label: string }> = {
     TX: { bg: 'bg-green-500/20', text: 'text-green-400', glow: 'glow-success', label: 'Transmitting' },
-    RX: { bg: 'bg-blue-500/20', text: 'text-blue-400', glow: 'glow-info', label: 'Receiving' },
+    TC: { bg: 'bg-blue-500/20', text: 'text-blue-400', glow: '', label: 'Completed' },
     TO: { bg: 'bg-red-500/20', text: 'text-red-400', glow: 'glow-destructive', label: 'Timeout' },
-    TD: { bg: 'bg-cyan-500/20', text: 'text-cyan-400', glow: 'glow-info', label: 'Term Data' },
+    TD: { bg: 'bg-cyan-500/20', text: 'text-cyan-400', glow: '', label: 'DGID Change' },
     WD: { bg: 'bg-yellow-500/20', text: 'text-yellow-400', glow: 'glow-warning', label: 'Watchdog' },
     TB: { bg: 'bg-gray-500/20', text: 'text-gray-400', glow: '', label: 'Blocked' },
   };
 
-  const config = statusConfig[status] || statusConfig.RX;
+  const config = statusConfig[status] || statusConfig.TC;
 
   return (
     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${config.bg} ${config.text} ${config.glow}`}>
@@ -268,7 +305,7 @@ function MobileCard({ stream }: { stream: QSOStream }) {
       <button
         onClick={() => setExpanded(!expanded)}
         className="flex items-center gap-1 text-sm text-primary hover:text-primary/80 transition-colors"
-        data-testid={`expand-qso-${stream.id}`}
+        data-testid={`expand-qso-${stream.stream_id}`}
       >
         {expanded ? 'Less details' : 'More details'}
         <ChevronDown className={`w-4 h-4 transition-transform ${expanded ? 'rotate-180' : ''}`} />
@@ -301,7 +338,7 @@ function MobileCard({ stream }: { stream: QSOStream }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 mt-3 text-sm text-primary hover:underline"
-                data-testid={`map-link-${stream.id}`}
+                data-testid={`map-link-${stream.stream_id}`}
               >
                 <MapPin className="w-4 h-4" />
                 View on map
@@ -317,7 +354,7 @@ function MobileCard({ stream }: { stream: QSOStream }) {
 
 function LinkedCard({ station }: { station: LinkedStation }) {
   const [expanded, setExpanded] = useState(false);
-  const missing = station.BTH_TOUT - station.BTH_TCORR;
+  const missing = parseInt(station.BTH_TOUT) - parseInt(station.BTH_TCORR);
   
   return (
     <motion.div
@@ -350,7 +387,7 @@ function LinkedCard({ station }: { station: LinkedStation }) {
       <button
         onClick={() => setExpanded(!expanded)}
         className="flex items-center gap-1 text-sm text-primary hover:text-primary/80 transition-colors"
-        data-testid={`expand-linked-${station.id}`}
+        data-testid={`expand-linked-${station.call}`}
       >
         {expanded ? 'Less details' : 'More details'}
         <ChevronDown className={`w-4 h-4 transition-transform ${expanded ? 'rotate-180' : ''}`} />
@@ -438,7 +475,7 @@ export default function Dashboard() {
                   pYSF3 Reflector
                 </h1>
                 <p className="text-xs sm:text-sm text-muted-foreground">
-                  C4FM Multi Streams • #{reflectorInfo.REF_ID}
+                  C4FM Multi Streams • #{mockReflectorInfo.REF_ID}
                 </p>
               </div>
             </div>
@@ -519,7 +556,7 @@ export default function Dashboard() {
           {[
             { label: 'Active QSOs', value: mockQSOData.filter(s => s.status === 'TX').length, icon: Activity, color: 'text-green-400' },
             { label: 'Linked Stations', value: mockLinkedData.length, icon: Wifi, color: 'text-blue-400' },
-            { label: 'Active Streams', value: reflectorInfo.dgid_list.split(',').length, icon: Signal, color: 'text-purple-400' },
+            { label: 'Active Streams', value: mockReflectorInfo.dgid_list.split(',').length, icon: Signal, color: 'text-purple-400' },
             { label: 'Blocked', value: mockBlockedData.length, icon: Ban, color: 'text-red-400' },
           ].map((stat, i) => (
             <motion.div
@@ -568,14 +605,14 @@ export default function Dashboard() {
                   <tbody>
                     {mockQSOData.map((stream, index) => (
                       <motion.tr
-                        key={stream.id}
+                        key={stream.stream_id}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.05 }}
                         className="border-b border-border/30 hover:bg-muted/30 transition-colors"
-                        data-testid={`qso-row-${stream.id}`}
+                        data-testid={`qso-row-${stream.stream_id}`}
                       >
-                        <td className="py-3 px-4 text-sm text-muted-foreground">{stream.id}</td>
+                        <td className="py-3 px-4 text-sm text-muted-foreground">{index + 1}</td>
                         <td className="py-3 px-4">
                           <StatusBadge status={stream.status} />
                         </td>
@@ -596,7 +633,7 @@ export default function Dashboard() {
                               target="_blank"
                               rel="noopener noreferrer"
                               className="flex items-center gap-1 text-primary hover:underline text-sm"
-                              data-testid={`map-btn-${stream.id}`}
+                              data-testid={`map-btn-${stream.stream_id}`}
                             >
                               <MapPin className="w-4 h-4" />
                               <span className="hidden xl:inline">View</span>
@@ -611,7 +648,7 @@ export default function Dashboard() {
 
               <div className="lg:hidden space-y-3">
                 {mockQSOData.map((stream) => (
-                  <MobileCard key={stream.id} stream={stream} />
+                  <MobileCard key={stream.stream_id} stream={stream} />
                 ))}
               </div>
             </motion.div>
@@ -641,14 +678,14 @@ export default function Dashboard() {
                   <tbody>
                     {mockLinkedData.map((station, index) => (
                       <motion.tr
-                        key={station.id}
+                        key={station.call}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.05 }}
                         className="border-b border-border/30 hover:bg-muted/30 transition-colors"
-                        data-testid={`linked-row-${station.id}`}
+                        data-testid={`linked-row-${station.call}`}
                       >
-                        <td className="py-3 px-4 text-sm text-muted-foreground">{station.id}</td>
+                        <td className="py-3 px-4 text-sm text-muted-foreground">{index + 1}</td>
                         <td className="py-3 px-4">
                           <CallsignWithFlag callsign={station.call.split('-')[0]} />
                         </td>
@@ -674,7 +711,7 @@ export default function Dashboard() {
 
               <div className="lg:hidden space-y-3">
                 {mockLinkedData.map((station) => (
-                  <LinkedCard key={station.id} station={station} />
+                  <LinkedCard key={station.call} station={station} />
                 ))}
               </div>
             </motion.div>
@@ -701,14 +738,14 @@ export default function Dashboard() {
                   <tbody>
                     {mockBlockedData.map((station, index) => (
                       <motion.tr
-                        key={station.id}
+                        key={station.call}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.05 }}
                         className="border-b border-border/30 hover:bg-muted/30 transition-colors"
-                        data-testid={`blocked-row-${station.id}`}
+                        data-testid={`blocked-row-${station.call}`}
                       >
-                        <td className="py-3 px-4 text-sm text-muted-foreground">{station.id}</td>
+                        <td className="py-3 px-4 text-sm text-muted-foreground">{index + 1}</td>
                         <td className="py-3 px-4">
                           <CallsignWithFlag callsign={station.call} />
                         </td>
@@ -723,7 +760,7 @@ export default function Dashboard() {
 
               <div className="lg:hidden space-y-3">
                 {mockBlockedData.map((station) => (
-                  <BlockedCard key={station.id} station={station} />
+                  <BlockedCard key={station.call} station={station} />
                 ))}
               </div>
             </motion.div>
@@ -736,20 +773,20 @@ export default function Dashboard() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-center sm:text-left">
               <p className="text-sm text-muted-foreground">
-                <span className="font-semibold text-foreground">Reflector:</span> #{reflectorInfo.REF_ID} •
-                <span className="font-semibold text-foreground ml-2">Ver:</span> {reflectorInfo.ver} •
-                <span className="font-semibold text-foreground ml-2">APRS:</span> {reflectorInfo.APRS_EN}
+                <span className="font-semibold text-foreground">Reflector:</span> #{mockReflectorInfo.REF_ID} •
+                <span className="font-semibold text-foreground ml-2">Ver:</span> {mockReflectorInfo.ver} •
+                <span className="font-semibold text-foreground ml-2">APRS:</span> {mockReflectorInfo.APRS_EN}
               </p>
               <p className="text-sm text-muted-foreground mt-1">
-                <span className="font-semibold text-foreground">Streams:</span> {reflectorInfo.dgid_list} •
-                <span className="font-semibold text-foreground ml-2">Default:</span> {reflectorInfo.dgid_def}
+                <span className="font-semibold text-foreground">Streams:</span> {mockReflectorInfo.dgid_list} •
+                <span className="font-semibold text-foreground ml-2">Default:</span> {mockReflectorInfo.dgid_def}
               </p>
-              <p className="text-xs text-muted-foreground mt-2">{reflectorInfo.REF_DESC}</p>
+              <p className="text-xs text-muted-foreground mt-2">{mockReflectorInfo.REF_DESC}</p>
             </div>
             
             <div className="flex items-center gap-3">
               <a
-                href={`http://${reflectorInfo.web}`}
+                href={`http://${mockReflectorInfo.web}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium"
@@ -759,7 +796,7 @@ export default function Dashboard() {
                 Website
               </a>
               <a
-                href={`mailto:${reflectorInfo.contact}`}
+                href={`mailto:${mockReflectorInfo.contact}`}
                 className="flex items-center gap-2 px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 transition-colors text-sm font-medium"
                 data-testid="email-link"
               >
