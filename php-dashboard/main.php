@@ -542,7 +542,35 @@ echo "<p><strong>Active Streams:</strong> {$row['dgid_list']} &bull; <strong>Def
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-setTimeout(function(){ location.reload(); }, 2000);
+(function() {
+    var xhr = new XMLHttpRequest();
+    function refresh() {
+        xhr.open('GET', window.location.pathname + '?ajax=1&t=' + Date.now(), true);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                var temp = document.createElement('div');
+                temp.innerHTML = xhr.responseText;
+                var newTable = temp.querySelector('.table-container');
+                var newMobile = temp.querySelector('.mobile-only');
+                var newStats = temp.querySelector('.stats-row');
+                if (newTable) {
+                    var oldTable = document.querySelector('.table-container');
+                    if (oldTable) oldTable.innerHTML = newTable.innerHTML;
+                }
+                if (newMobile) {
+                    var oldMobile = document.querySelector('.mobile-only');
+                    if (oldMobile) oldMobile.innerHTML = newMobile.innerHTML;
+                }
+                if (newStats) {
+                    var oldStats = document.querySelector('.stats-row');
+                    if (oldStats) oldStats.innerHTML = newStats.innerHTML;
+                }
+            }
+        };
+        xhr.send();
+    }
+    setInterval(refresh, 2000);
+})();
 </script>
 </body>
 </html>
