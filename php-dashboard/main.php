@@ -156,6 +156,17 @@
             background: linear-gradient(90deg, rgba(59, 130, 246, 0.08) 0%, transparent 100%);
             transform: scale(1.002);
         }
+        .table tbody tr.row-tx {
+            background: linear-gradient(90deg, rgba(34, 197, 94, 0.15) 0%, rgba(34, 197, 94, 0.05) 50%, transparent 100%);
+            animation: rowGlow 2s infinite;
+        }
+        .table tbody tr.row-tx:hover {
+            background: linear-gradient(90deg, rgba(34, 197, 94, 0.25) 0%, rgba(34, 197, 94, 0.1) 50%, transparent 100%);
+        }
+        @keyframes rowGlow {
+            0%, 100% { box-shadow: inset 0 0 20px rgba(34, 197, 94, 0.1); }
+            50% { box-shadow: inset 0 0 30px rgba(34, 197, 94, 0.2); }
+        }
         .status-badge {
             display: inline-flex;
             align-items: center;
@@ -464,7 +475,8 @@ while ($row = $res->fetchArray()) {
     $flag = getCountryFlag($row['call']);
     $flagHtml = $flag ? "<img class='flag-icon' src='https://flagcdn.com/w40/{$flag}.png' alt='{$flag}'>" : "";
     $osm = !empty($row['latitude']) ? "<a href='https://www.openstreetmap.org/?mlat={$row['latitude']}&mlon={$row['longitude']}' target='_blank' class='btn-map'>📍 Map</a>" : "";
-    echo "<tr>";
+    $rowClass = $row['status'] === 'TX' ? 'row-tx' : '';
+    echo "<tr class='{$rowClass}'>";
     echo "<td>{$nr}</td>";
     echo "<td><span class='status-badge {$statusClass}'>{$row['status']}</span></td>";
     echo "<td>{$flagHtml}<span class='callsign'>{$row['call']}</span></td>";
