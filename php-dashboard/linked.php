@@ -92,7 +92,7 @@
             margin-bottom: 1.5rem;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
-        .table { margin: 0; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; }
+        .table { margin: 0; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; }
         .table thead th {
             background: linear-gradient(180deg, var(--bg-header) 0%, var(--bg-elevated) 100%);
             color: var(--text-secondary);
@@ -119,7 +119,8 @@
             font-size: 0.8rem;
             border: 1px solid rgba(59, 130, 246, 0.2);
         }
-        .flag-icon { width: 22px; height: 15px; margin-right: 6px; border-radius: 3px; vertical-align: middle; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .flag-icon { width: 28px; height: 20px; margin-right: 8px; border-radius: 4px; vertical-align: middle; box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+        .callsign { font-weight: 700; font-size: 1.1rem; color: var(--accent-cyan); text-shadow: 0 0 10px rgba(6, 182, 212, 0.3); }
         footer {
             background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-dark) 100%);
             border-top: 1px solid var(--border-color);
@@ -155,8 +156,9 @@
         }
         .mobile-card:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3); }
         .mobile-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(30, 58, 95, 0.5); }
-        .mobile-card-call { font-size: 1.2rem; font-weight: 700; color: var(--accent-cyan); }
-        .mobile-card-row { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid rgba(30, 58, 95, 0.3); font-size: 0.9rem; }
+        .mobile-card-call { font-size: 1.4rem; font-weight: 700; color: var(--accent-cyan); }
+        .mobile-card-call .flag-icon { width: 32px; height: 22px; }
+        .mobile-card-row { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid rgba(30, 58, 95, 0.3); font-size: 1rem; }
         .mobile-card-row:last-child { border-bottom: none; }
         .mobile-card-label { color: var(--text-secondary); }
         .mobile-card-value { color: var(--text-primary); font-family: 'JetBrains Mono', monospace; }

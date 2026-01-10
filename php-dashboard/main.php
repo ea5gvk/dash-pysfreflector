@@ -131,7 +131,7 @@
             margin: 0;
             color: var(--text-primary);
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.82rem;
+            font-size: 0.95rem;
         }
         .table thead th {
             background: linear-gradient(180deg, var(--bg-header) 0%, var(--bg-elevated) 100%);
@@ -185,6 +185,7 @@
         .status-tb { background: linear-gradient(135deg, rgba(100, 116, 139, 0.25) 0%, rgba(100, 116, 139, 0.1) 100%); color: #94a3b8; }
         .callsign {
             font-weight: 700;
+            font-size: 1.1rem;
             color: var(--accent-cyan);
             text-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
         }
@@ -227,12 +228,12 @@
             transform: translateY(-1px);
         }
         .flag-icon {
-            width: 22px;
-            height: 15px;
-            margin-right: 6px;
-            border-radius: 3px;
+            width: 28px;
+            height: 20px;
+            margin-right: 8px;
+            border-radius: 4px;
             vertical-align: middle;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
         }
         footer {
             background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-dark) 100%);
@@ -290,18 +291,22 @@
             border-bottom: 1px solid rgba(30, 58, 95, 0.5);
         }
         .mobile-card-call {
-            font-size: 1.2rem;
+            font-size: 1.4rem;
             font-weight: 700;
             color: var(--accent-cyan);
             text-shadow: 0 0 15px rgba(6, 182, 212, 0.3);
+        }
+        .mobile-card-call .flag-icon {
+            width: 32px;
+            height: 22px;
         }
         .mobile-card-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.5rem 0;
+            padding: 0.6rem 0;
             border-bottom: 1px solid rgba(30, 58, 95, 0.3);
-            font-size: 0.9rem;
+            font-size: 1rem;
         }
         .mobile-card-row:last-child { border-bottom: none; }
         .mobile-card-label { color: var(--text-secondary); font-weight: 500; }
