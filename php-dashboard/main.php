@@ -499,6 +499,7 @@ while ($row = $res->fetchArray()) {
         </div>
     </div>
 
+<div class="mobile-cards-container">
 <?php
 $res = $db->query('SELECT * FROM streams ORDER BY date_time DESC LIMIT 30');
 $nr = 1;
@@ -524,6 +525,7 @@ while ($row = $res->fetchArray()) {
     ++$nr;
 }
 ?>
+</div>
 </div>
 
 <footer>
@@ -551,18 +553,18 @@ echo "<p><strong>Active Streams:</strong> {$row['dgid_list']} &bull; <strong>Def
                 var temp = document.createElement('div');
                 temp.innerHTML = xhr.responseText;
                 var newTable = temp.querySelector('.table-container');
-                var newMobile = temp.querySelector('.mobile-only');
-                var newStats = temp.querySelector('.stats-row');
+                var newMobile = temp.querySelector('.mobile-cards-container');
+                var newStats = temp.querySelector('.stats-bar');
                 if (newTable) {
                     var oldTable = document.querySelector('.table-container');
                     if (oldTable) oldTable.innerHTML = newTable.innerHTML;
                 }
                 if (newMobile) {
-                    var oldMobile = document.querySelector('.mobile-only');
+                    var oldMobile = document.querySelector('.mobile-cards-container');
                     if (oldMobile) oldMobile.innerHTML = newMobile.innerHTML;
                 }
                 if (newStats) {
-                    var oldStats = document.querySelector('.stats-row');
+                    var oldStats = document.querySelector('.stats-bar');
                     if (oldStats) oldStats.innerHTML = newStats.innerHTML;
                 }
             }
