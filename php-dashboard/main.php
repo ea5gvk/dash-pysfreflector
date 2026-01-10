@@ -3,8 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta http-equiv="refresh" content="10"/>
-    <title>pYSF3 C4FM Reflector - QSO Traffic</title>
+        <title>pYSF3 C4FM Reflector - QSO Traffic</title>
     <meta name="author" content="ADN Systems Spain">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -371,7 +370,7 @@
         <h1 class="page-title">QSO Traffic</h1>
         <div class="live-badge">
             <span class="live-dot"></span>
-            LIVE - Auto-refresh 10s
+            LIVE - Auto-refresh 5s
         </div>
     </div>
 
@@ -526,5 +525,21 @@ echo "<p><strong>Active Streams:</strong> {$row['dgid_list']} &bull; <strong>Def
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+setInterval(function() {
+    fetch(window.location.href)
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newContent = doc.querySelector('.container-fluid');
+            const oldContent = document.querySelector('.container-fluid');
+            if (newContent && oldContent) {
+                oldContent.innerHTML = newContent.innerHTML;
+            }
+        })
+        .catch(err => console.log('Refresh error:', err));
+}, 5000);
+</script>
 </body>
 </html>
