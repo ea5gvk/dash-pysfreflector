@@ -157,10 +157,10 @@
             transform: scale(1.002);
         }
         .table tbody tr.row-tx td {
-            background: rgba(0, 200, 80, 0.45) !important;
-            border-color: rgba(0, 255, 100, 0.6) !important;
+            background: rgba(34, 197, 94, 0.45) !important;
+            border-color: rgba(34, 197, 94, 0.6) !important;
             color: #ffffff !important;
-            text-shadow: 0 0 10px rgba(0, 255, 100, 0.8), 0 1px 2px rgba(0, 0, 0, 0.8);
+            text-shadow: 0 0 10px rgba(34, 197, 94, 0.8), 0 1px 2px rgba(0, 0, 0, 0.8);
             animation: cellGlow 1.5s infinite;
         }
         .table tbody tr.row-tx td .callsign,
@@ -168,19 +168,19 @@
         .table tbody tr.row-tx td .radio-badge,
         .table tbody tr.row-tx td small {
             color: #ffffff !important;
-            text-shadow: 0 0 10px rgba(0, 255, 100, 0.8), 0 1px 2px rgba(0, 0, 0, 0.8);
+            text-shadow: 0 0 10px rgba(34, 197, 94, 0.8), 0 1px 2px rgba(0, 0, 0, 0.8);
         }
         .table tbody tr.row-tx:hover td {
-            background: rgba(0, 200, 80, 0.55) !important;
+            background: rgba(34, 197, 94, 0.55) !important;
         }
         @keyframes cellGlow {
             0%, 100% { 
-                background: rgba(0, 200, 80, 0.4);
-                box-shadow: inset 0 0 15px rgba(0, 255, 100, 0.4);
+                background: rgba(34, 197, 94, 0.4);
+                box-shadow: inset 0 0 15px rgba(34, 197, 94, 0.4);
             }
             50% { 
-                background: rgba(0, 200, 80, 0.55);
-                box-shadow: inset 0 0 25px rgba(0, 255, 100, 0.6);
+                background: rgba(34, 197, 94, 0.55);
+                box-shadow: inset 0 0 25px rgba(34, 197, 94, 0.6);
             }
         }
         .status-badge {
