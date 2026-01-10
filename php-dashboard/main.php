@@ -157,16 +157,23 @@
             transform: scale(1.002);
         }
         .table tbody tr.row-tx td {
-            background: rgba(34, 197, 94, 0.25) !important;
-            border-color: rgba(34, 197, 94, 0.3) !important;
+            background: rgba(0, 255, 100, 0.2) !important;
+            border-color: rgba(0, 255, 100, 0.4) !important;
+            text-shadow: 0 0 8px rgba(0, 255, 100, 0.6);
             animation: cellGlow 1.5s infinite;
         }
         .table tbody tr.row-tx:hover td {
-            background: rgba(34, 197, 94, 0.35) !important;
+            background: rgba(0, 255, 100, 0.35) !important;
         }
         @keyframes cellGlow {
-            0%, 100% { background: rgba(34, 197, 94, 0.25); }
-            50% { background: rgba(34, 197, 94, 0.4); }
+            0%, 100% { 
+                background: rgba(0, 255, 100, 0.15);
+                box-shadow: inset 0 0 15px rgba(0, 255, 100, 0.3);
+            }
+            50% { 
+                background: rgba(0, 255, 100, 0.35);
+                box-shadow: inset 0 0 25px rgba(0, 255, 100, 0.5);
+            }
         }
         .status-badge {
             display: inline-flex;
