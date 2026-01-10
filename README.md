@@ -210,6 +210,350 @@ docker cp pysf3-collector:/opt/collector/data/collector3.db ./backup.db
 
 ---
 
+## Referencia Completa de Configuración Docker
+
+### Estructura de directorios
+
+```
+pysf3-dashboard/
+├── docker-compose.yml           # Orquestación de servicios
+├── Dockerfile                   # Build del dashboard
+├── .dockerignore                # Archivos excluidos del build
+├── docker/
+│   ├── ysfreflector/
+│   │   └── Dockerfile           # Imagen del reflector
+│   ├── collector/
+│   │   ├── Dockerfile           # Imagen del collector
+│   │   └── entrypoint.sh        # Script de inicio
+│   ├── api/
+│   │   ├── Dockerfile           # Imagen de la API
+│   │   └── api_server.py        # Servidor Flask
+│   └── nginx.conf               # Configuración de Nginx
+├── config/
+│   ├── pysfreflector.ini        # Config reflector (volumen)
+│   ├── collector3.ini           # Config collector (volumen)
+│   ├── dashboard.json           # Config dashboard (volumen)
+│   ├── dgid.db                  # Descripciones DGID (volumen)
+│   ├── white.db                 # Lista blanca (volumen)
+│   ├── black.db                 # Lista negra (volumen)
+│   └── YSFHosts.txt             # Hosts YSF (volumen)
+└── client/                      # Código fuente React
+```
+
+### Archivo: config/pysfreflector.ini
+
+Configuración completa del reflector pYSF3:
+
+```ini
+[YSFReflector3]
+# Identificación del reflector
+REF_ID=11111                    # ID único del reflector (5 dígitos)
+REF_NAME=ES ADN-Systems         # Nombre corto (máx 16 caracteres)
+REF_DESC=Reflector C4FM Spain   # Descripción (máx 14 caracteres)
+REFLECTOR_PORT=42000            # Puerto UDP principal
+
+[Json]
+# Puerto para comunicación con collector3.py
+JSON_PORT=42223                 # Puerto de datos JSON
+JSON_BIND=0.0.0.0               # IP de escucha (0.0.0.0 = todas)
+
+[APRS]
+# Integración con red APRS
+APRS_EN=True                    # Habilitar APRS (True/False)
+APRS_SERVER=euro.aprs2.net      # Servidor APRS regional
+APRS_PORT=14580                 # Puerto APRS
+APRS_SSID=7                     # SSID para el reflector
+APRS_PASSCODE=0                 # Tu passcode APRS (obtener en aprs.fi)
+
+[Admin]
+# Administración remota
+ADMIN_ENABLED=True              # Habilitar admin (True/False)
+ADMIN_PASSWORD=CambiaEstaClave  # Contraseña de administración
+
+[DGID]
+# Configuración de grupos digitales
+DGID_DEFAULT=0                  # DGID por defecto para nuevas conexiones
+DGID_LOCAL=1                    # DGID local del reflector
+
+[YSFNetwork]
+# Registro en red YSF
+YSF_ENABLED=False               # Registrar en ysfreflector.de
+YSF_SERVER=register.ysfreflector.de
+YSF_PORT=42000
+
+[Contact]
+# Información de contacto
+CONTACT=admin@tu-dominio.com    # Email de contacto
+WEB=https://tu-dominio.com      # Web del reflector
+```
+
+### Archivo: config/collector3.ini
+
+Configuración del recolector de datos:
+
+```ini
+# Host del reflector (nombre del servicio Docker o IP)
+REFLECTOR_HOST=ysfreflector
+
+# Puerto JSON del reflector
+REFLECTOR_PORT=42223
+
+# Ruta de la base de datos SQLite
+DB_PATH=/opt/collector/data/collector3.db
+
+# Mostrar transmisiones bloqueadas (True/False)
+SHOW_TB=True
+```
+
+### Archivo: config/dashboard.json
+
+Configuración del dashboard React:
+
+```json
+{
+  "apiUrl": "/api",
+  "refreshInterval": 60000,
+  "theme": "dark",
+  "title": "C4FM Reflector Dashboard",
+  "showBlocked": true,
+  "maxStreams": 100,
+  "features": {
+    "showFlags": true,
+    "showRadioModels": true,
+    "showCoordinates": true,
+    "showAprs": true
+  }
+}
+```
+
+| Parámetro | Tipo | Descripción |
+|-----------|------|-------------|
+| `apiUrl` | string | URL base de la API |
+| `refreshInterval` | number | Intervalo de actualización en ms |
+| `theme` | string | Tema visual (dark/light) |
+| `title` | string | Título del dashboard |
+| `showBlocked` | boolean | Mostrar pestaña de bloqueados |
+| `maxStreams` | number | Máximo de streams a mostrar |
+| `features.showFlags` | boolean | Mostrar banderas de país |
+| `features.showRadioModels` | boolean | Mostrar badges de radios |
+| `features.showCoordinates` | boolean | Mostrar coordenadas GPS |
+| `features.showAprs` | boolean | Mostrar estado APRS |
+
+### Archivo: config/dgid.db
+
+Descripciones personalizadas para cada DGID:
+
+```
+# Formato: DGID,Descripción
+0,Default
+1,Local
+9,Emergencias
+22,Nacional España
+30,Andalucía
+31,Aragón
+32,Asturias
+33,Baleares
+34,Canarias
+35,Cantabria
+36,Castilla-La Mancha
+37,Castilla y León
+38,Cataluña
+39,Extremadura
+40,Galicia
+41,Madrid
+42,Murcia
+43,Navarra
+44,País Vasco
+45,La Rioja
+46,Valencia
+```
+
+### Archivo: config/white.db
+
+Lista blanca de indicativos permitidos:
+
+```
+# Lista blanca - solo estos indicativos pueden conectar
+# Dejar vacío para permitir todos
+# Formato: CALLSIGN (uno por línea)
+
+# Ejemplo:
+# EA4XXX
+# EA5YYY
+# EB1ZZZ
+```
+
+### Archivo: config/black.db
+
+Lista negra de indicativos bloqueados:
+
+```
+# Lista negra - estos indicativos serán rechazados
+# Formato: CALLSIGN (uno por línea)
+
+# Ejemplo:
+# PIRATA1
+# NOCALL
+```
+
+### Archivo: config/YSFHosts.txt
+
+Lista de hosts YSF para interconexión:
+
+```
+# Formato: ID;Nombre;Descripción;IP;Puerto
+# Ejemplo:
+# 21421;ES Spain;Reflector Nacional;ysf.spain.com;42000
+# 00001;IT Italy;Reflector Italia;ysf.italy.net;42000
+```
+
+### Variables de entorno del docker-compose.yml
+
+Puedes sobrescribir variables de entorno sin editar los archivos:
+
+```yaml
+# En docker-compose.yml o docker-compose.override.yml
+services:
+  collector:
+    environment:
+      - REFLECTOR_HOST=192.168.1.100    # IP externa del reflector
+      - REFLECTOR_PORT=42223
+      - DB_PATH=/opt/collector/data/collector3.db
+
+  api:
+    environment:
+      - DB_PATH=/opt/collector/data/collector3.db
+      - API_PORT=5001
+      - STREAMS_LIMIT=200               # Más streams en la respuesta
+
+  dashboard:
+    environment:
+      - API_URL=http://api:5001
+```
+
+### Personalizar puertos expuestos
+
+Editar `docker-compose.yml` para cambiar puertos:
+
+```yaml
+services:
+  ysfreflector:
+    ports:
+      - "42000:42000/udp"    # Puerto reflector → cambiar primer número
+      
+  api:
+    ports:
+      - "8081:5001"          # API en puerto 8081 externo
+      
+  dashboard:
+    ports:
+      - "80:80"              # Dashboard en puerto 80 (requiere root)
+```
+
+### Uso con proxy inverso externo
+
+Si ya tienes Nginx/Traefik, puedes exponer solo los puertos necesarios:
+
+```yaml
+# docker-compose.override.yml
+version: '3.8'
+services:
+  dashboard:
+    ports: []  # No exponer puerto
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`reflector.tu-dominio.com`)"
+      
+  api:
+    ports: []  # No exponer puerto
+    
+  ysfreflector:
+    ports:
+      - "42000:42000/udp"  # Solo el reflector necesita puerto público
+```
+
+### Logs y monitorización
+
+```bash
+# Ver logs en tiempo real de todos los servicios
+docker compose logs -f
+
+# Ver logs de un servicio específico
+docker compose logs -f ysfreflector
+docker compose logs -f collector
+docker compose logs -f api
+docker compose logs -f dashboard
+
+# Ver últimas 100 líneas
+docker compose logs --tail=100 collector
+
+# Ver uso de recursos
+docker stats
+
+# Inspeccionar un contenedor
+docker inspect pysf3-collector
+```
+
+### Actualizar a nueva versión
+
+```bash
+cd /opt/pysf3-dashboard
+
+# Obtener últimos cambios
+git pull
+
+# Reconstruir imágenes
+docker compose build --no-cache
+
+# Reiniciar servicios
+docker compose up -d
+
+# Verificar que todo funciona
+docker compose ps
+docker compose logs -f
+```
+
+### Solución de problemas Docker
+
+**El collector no conecta al reflector:**
+```bash
+# Verificar que el reflector está corriendo
+docker compose logs ysfreflector
+
+# Verificar conectividad entre contenedores
+docker compose exec collector ping ysfreflector
+```
+
+**La API no encuentra la base de datos:**
+```bash
+# Verificar que el volumen existe
+docker volume ls | grep collector
+
+# Verificar contenido del volumen
+docker compose exec collector ls -la /opt/collector/data/
+```
+
+**El dashboard no carga datos:**
+```bash
+# Probar la API directamente
+curl http://localhost:5001/api/health
+curl http://localhost:5001/api/dashboard
+
+# Ver logs del dashboard
+docker compose logs dashboard
+```
+
+**Reiniciar todo desde cero:**
+```bash
+# Parar y eliminar todo (¡incluida la base de datos!)
+docker compose down -v
+
+# Reconstruir desde cero
+docker compose up -d --build
+```
+
+---
+
 ## Instalación Manual en Debian
 
 ### 1. Actualizar el sistema
