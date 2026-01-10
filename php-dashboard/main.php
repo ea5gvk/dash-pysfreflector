@@ -156,20 +156,17 @@
             background: linear-gradient(90deg, rgba(59, 130, 246, 0.08) 0%, transparent 100%);
             transform: scale(1.002);
         }
-        .table tbody tr.row-tx {
-            background: linear-gradient(90deg, rgba(34, 197, 94, 0.35) 0%, rgba(34, 197, 94, 0.2) 50%, rgba(34, 197, 94, 0.1) 100%) !important;
-            box-shadow: inset 0 0 30px rgba(34, 197, 94, 0.3), 0 0 15px rgba(34, 197, 94, 0.2);
-            animation: rowGlow 1.5s infinite;
-        }
         .table tbody tr.row-tx td {
-            border-color: rgba(34, 197, 94, 0.4) !important;
+            background: rgba(34, 197, 94, 0.25) !important;
+            border-color: rgba(34, 197, 94, 0.3) !important;
+            animation: cellGlow 1.5s infinite;
         }
-        .table tbody tr.row-tx:hover {
-            background: linear-gradient(90deg, rgba(34, 197, 94, 0.45) 0%, rgba(34, 197, 94, 0.3) 50%, rgba(34, 197, 94, 0.15) 100%) !important;
+        .table tbody tr.row-tx:hover td {
+            background: rgba(34, 197, 94, 0.35) !important;
         }
-        @keyframes rowGlow {
-            0%, 100% { box-shadow: inset 0 0 30px rgba(34, 197, 94, 0.3), 0 0 15px rgba(34, 197, 94, 0.2); }
-            50% { box-shadow: inset 0 0 50px rgba(34, 197, 94, 0.5), 0 0 25px rgba(34, 197, 94, 0.4); }
+        @keyframes cellGlow {
+            0%, 100% { background: rgba(34, 197, 94, 0.25); }
+            50% { background: rgba(34, 197, 94, 0.4); }
         }
         .status-badge {
             display: inline-flex;
