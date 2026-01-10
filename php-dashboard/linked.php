@@ -47,8 +47,8 @@
             z-index: 100;
             backdrop-filter: blur(10px);
         }
-        .navbar-brand img { max-height: 55px; width: auto; filter: drop-shadow(0 2px 8px rgba(59, 130, 246, 0.3)); }
-        @media (max-width: 576px) { .navbar-brand img { max-height: 40px; } .navbar { padding: 0.5rem 1rem; } }
+        .navbar-brand img { max-height: 80px; width: auto; filter: drop-shadow(0 4px 15px rgba(59, 130, 246, 0.4)); }
+        @media (max-width: 576px) { .navbar-brand img { max-height: 55px; } .navbar { padding: 0.5rem 1rem; } }
         .nav-link {
             color: var(--text-secondary) !important;
             font-weight: 600;
