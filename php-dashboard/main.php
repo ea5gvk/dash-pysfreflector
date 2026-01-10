@@ -392,7 +392,7 @@
 <?php
 $db = new SQLite3('/opt/pysfreflector/collector3.db');
 
-$txCount = $db->querySingle("SELECT COUNT(*) FROM streams WHERE status = 'TX'");
+$txCount = $db->querySingle("SELECT COUNT(*) FROM streams WHERE UPPER(TRIM(status)) = 'TX'");
 $totalCount = $db->querySingle("SELECT COUNT(*) FROM streams");
 ?>
     <div class="stats-bar">
