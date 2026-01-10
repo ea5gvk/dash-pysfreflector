@@ -542,20 +542,23 @@ echo "<p><strong>Active Streams:</strong> {$row['dgid_list']} &bull; <strong>Def
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-setInterval(function() {
-    fetch(window.location.href)
-        .then(response => response.text())
-        .then(html => {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            const newContent = doc.querySelector('.container-fluid');
-            const oldContent = document.querySelector('.container-fluid');
+console.log('Auto-refresh initialized - every 2 seconds');
+function refreshContent() {
+    fetch(window.location.href + '?t=' + Date.now())
+        .then(function(response) { return response.text(); })
+        .then(function(html) {
+            var parser = new DOMParser();
+            var doc = parser.parseFromString(html, 'text/html');
+            var newContent = doc.querySelector('.container-fluid');
+            var oldContent = document.querySelector('.container-fluid');
             if (newContent && oldContent) {
                 oldContent.innerHTML = newContent.innerHTML;
+                console.log('Content refreshed: ' + new Date().toLocaleTimeString());
             }
         })
-        .catch(err => console.log('Refresh error:', err));
-}, 2000);
+        .catch(function(err) { console.log('Refresh error:', err); });
+}
+setInterval(refreshContent, 2000);
 </script>
 </body>
 </html>
