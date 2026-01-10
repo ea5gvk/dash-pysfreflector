@@ -159,8 +159,16 @@
         .table tbody tr.row-tx td {
             background: rgba(0, 255, 100, 0.2) !important;
             border-color: rgba(0, 255, 100, 0.4) !important;
-            text-shadow: 0 0 8px rgba(0, 255, 100, 0.6);
+            color: #ffffff !important;
+            text-shadow: 0 0 10px rgba(0, 255, 100, 0.8), 0 1px 2px rgba(0, 0, 0, 0.8);
             animation: cellGlow 1.5s infinite;
+        }
+        .table tbody tr.row-tx td .callsign,
+        .table tbody tr.row-tx td .dgid-badge,
+        .table tbody tr.row-tx td .radio-badge,
+        .table tbody tr.row-tx td small {
+            color: #ffffff !important;
+            text-shadow: 0 0 10px rgba(0, 255, 100, 0.8), 0 1px 2px rgba(0, 0, 0, 0.8);
         }
         .table tbody tr.row-tx:hover td {
             background: rgba(0, 255, 100, 0.35) !important;
