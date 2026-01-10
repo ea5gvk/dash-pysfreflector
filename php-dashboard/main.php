@@ -157,15 +157,19 @@
             transform: scale(1.002);
         }
         .table tbody tr.row-tx {
-            background: linear-gradient(90deg, rgba(34, 197, 94, 0.15) 0%, rgba(34, 197, 94, 0.05) 50%, transparent 100%);
-            animation: rowGlow 2s infinite;
+            background: linear-gradient(90deg, rgba(34, 197, 94, 0.35) 0%, rgba(34, 197, 94, 0.2) 50%, rgba(34, 197, 94, 0.1) 100%) !important;
+            box-shadow: inset 0 0 30px rgba(34, 197, 94, 0.3), 0 0 15px rgba(34, 197, 94, 0.2);
+            animation: rowGlow 1.5s infinite;
+        }
+        .table tbody tr.row-tx td {
+            border-color: rgba(34, 197, 94, 0.4) !important;
         }
         .table tbody tr.row-tx:hover {
-            background: linear-gradient(90deg, rgba(34, 197, 94, 0.25) 0%, rgba(34, 197, 94, 0.1) 50%, transparent 100%);
+            background: linear-gradient(90deg, rgba(34, 197, 94, 0.45) 0%, rgba(34, 197, 94, 0.3) 50%, rgba(34, 197, 94, 0.15) 100%) !important;
         }
         @keyframes rowGlow {
-            0%, 100% { box-shadow: inset 0 0 20px rgba(34, 197, 94, 0.1); }
-            50% { box-shadow: inset 0 0 30px rgba(34, 197, 94, 0.2); }
+            0%, 100% { box-shadow: inset 0 0 30px rgba(34, 197, 94, 0.3), 0 0 15px rgba(34, 197, 94, 0.2); }
+            50% { box-shadow: inset 0 0 50px rgba(34, 197, 94, 0.5), 0 0 25px rgba(34, 197, 94, 0.4); }
         }
         .status-badge {
             display: inline-flex;
