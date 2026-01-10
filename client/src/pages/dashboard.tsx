@@ -459,13 +459,13 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background bg-grid">
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 sm:h-20">
+          <div className="flex items-center justify-between h-20 sm:h-24">
             <div className="flex items-center gap-3 sm:gap-4">
               <div className="relative">
                 <img 
                   src={adnLogo} 
                   alt="ADN Systems Spain" 
-                  className="h-10 sm:h-14 w-auto object-contain"
+                  className="h-14 sm:h-20 w-auto object-contain drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]"
                   data-testid="header-logo"
                 />
                 <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse border-2 border-background" />
