@@ -49,12 +49,12 @@
             backdrop-filter: blur(10px);
         }
         .navbar-brand img {
-            max-height: 80px;
+            max-height: 100px;
             width: auto;
-            filter: drop-shadow(0 4px 15px rgba(59, 130, 246, 0.4));
+            filter: drop-shadow(0 4px 20px rgba(59, 130, 246, 0.5));
         }
         @media (max-width: 576px) {
-            .navbar-brand img { max-height: 55px; }
+            .navbar-brand img { max-height: 70px; }
             .navbar { padding: 0.5rem 1rem; }
         }
         .nav-link {
@@ -370,7 +370,7 @@
         <h1 class="page-title">QSO Traffic</h1>
         <div class="live-badge">
             <span class="live-dot"></span>
-            LIVE - Auto-refresh 5s
+            LIVE - Auto-refresh 2s
         </div>
     </div>
 
@@ -539,7 +539,7 @@ setInterval(function() {
             }
         })
         .catch(err => console.log('Refresh error:', err));
-}, 5000);
+}, 2000);
 </script>
 </body>
 </html>
