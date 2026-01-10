@@ -242,70 +242,304 @@ El collector crea las siguientes tablas en SQLite:
 /opt/pysfreflector/collector3.db
 ```
 
-### API para el Dashboard
+### Integración en Tiempo Real
 
-Para que el dashboard pueda leer los datos, necesitas un endpoint API que:
-1. Lea la base de datos SQLite
-2. Devuelva los datos en formato JSON
+El sistema funciona con la siguiente arquitectura:
 
-Ejemplo de script PHP simple (`api.php`):
+```
+┌─────────────────┐    UDP/JSON     ┌──────────────┐    SQLite    ┌─────────┐    JSON     ┌───────────┐
+│ pYSFReflector3  │ ──────────────> │ collector3.py │ ──────────> │   API   │ ─────────> │ Dashboard │
+│  (puerto 42000) │   puerto 42223  │              │  .db file   │ PHP/Py  │            │   React   │
+└─────────────────┘                 └──────────────┘             └─────────┘            └───────────┘
+```
+
+### Paso 1: Instalar y ejecutar collector3.py
+
+El collector3.py se conecta al reflector pYSF3 y guarda los datos en SQLite:
+
+```bash
+cd /opt/pysfreflector
+python3 collector3.py &
+```
+
+Para ejecutarlo como servicio, crear `/etc/systemd/system/collector3.service`:
+```ini
+[Unit]
+Description=pYSF3 Collector
+After=network.target ysfreflector.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/pysfreflector
+ExecStart=/usr/bin/python3 /opt/pysfreflector/collector3.py
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable collector3
+sudo systemctl start collector3
+```
+
+### Paso 2: Crear la API
+
+Para que el dashboard React pueda leer los datos de SQLite, necesitas crear un endpoint API.
+
+#### Opción A: PHP (Recomendado si ya tienes Apache/Nginx con PHP)
+
+Crear `/var/www/html/api.php`:
+
 ```php
 <?php
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
+header('Cache-Control: no-cache, must-revalidate');
 
-$db = new SQLite3('/opt/pysfreflector/collector3.db');
+$db_path = '/opt/pysfreflector/collector3.db';
 
-$streams = $db->query('SELECT * FROM streams ORDER BY date_time DESC LIMIT 100');
-$reflector = $db->query('SELECT * FROM reflector LIMIT 1');
-$connected = $db->query('SELECT * FROM connected');
-
-$data = [
-    'streams' => [],
-    'reflector' => null,
-    'connected' => []
-];
-
-while ($row = $streams->fetchArray(SQLITE3_ASSOC)) {
-    $data['streams'][] = $row;
+if (!file_exists($db_path)) {
+    http_response_code(500);
+    echo json_encode(['error' => 'Database not found']);
+    exit;
 }
 
-$data['reflector'] = $reflector->fetchArray(SQLITE3_ASSOC);
-
-while ($row = $connected->fetchArray(SQLITE3_ASSOC)) {
-    $data['connected'][] = $row;
+try {
+    $db = new SQLite3($db_path, SQLITE3_OPEN_READONLY);
+    
+    // Obtener streams (últimos 100)
+    $streams_result = $db->query('SELECT * FROM streams ORDER BY date_time DESC LIMIT 100');
+    $streams = [];
+    while ($row = $streams_result->fetchArray(SQLITE3_ASSOC)) {
+        $streams[] = $row;
+    }
+    
+    // Obtener info del reflector
+    $reflector_result = $db->query('SELECT * FROM reflector ORDER BY date_time DESC LIMIT 1');
+    $reflector = $reflector_result->fetchArray(SQLITE3_ASSOC);
+    
+    // Obtener estaciones conectadas
+    $connected_result = $db->query('SELECT * FROM connected ORDER BY call');
+    $connected = [];
+    while ($row = $connected_result->fetchArray(SQLITE3_ASSOC)) {
+        $connected[] = $row;
+    }
+    
+    // Obtener bloqueados
+    $blocked_result = $db->query('SELECT * FROM blocked ORDER BY time DESC');
+    $blocked = [];
+    while ($row = $blocked_result->fetchArray(SQLITE3_ASSOC)) {
+        $blocked[] = $row;
+    }
+    
+    $db->close();
+    
+    echo json_encode([
+        'streams' => $streams,
+        'reflector' => $reflector,
+        'connected' => $connected,
+        'blocked' => $blocked,
+        'timestamp' => date('Y-m-d H:i:s'),
+        'status' => 'ok'
+    ], JSON_PRETTY_PRINT);
+    
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode(['error' => $e->getMessage()]);
 }
-
-echo json_encode($data);
 ?>
 ```
 
-O con Python/Flask:
+Dar permisos:
+```bash
+sudo chown www-data:www-data /var/www/html/api.php
+sudo chmod 644 /var/www/html/api.php
+# Asegurar que www-data puede leer la base de datos
+sudo chmod 644 /opt/pysfreflector/collector3.db
+```
+
+#### Opción B: Python Flask (Alternativa independiente)
+
+Crear `/opt/pysfreflector/api_server.py`:
+
 ```python
+#!/usr/bin/env python3
 from flask import Flask, jsonify
+from flask_cors import CORS
 import sqlite3
+import os
 
 app = Flask(__name__)
+CORS(app)  # Permitir peticiones desde cualquier origen
+
 DB_PATH = '/opt/pysfreflector/collector3.db'
+
+def get_db_connection():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
 
 @app.route('/api/dashboard')
 def get_dashboard_data():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
+    if not os.path.exists(DB_PATH):
+        return jsonify({'error': 'Database not found'}), 500
     
-    streams = conn.execute('SELECT * FROM streams ORDER BY date_time DESC LIMIT 100').fetchall()
-    reflector = conn.execute('SELECT * FROM reflector LIMIT 1').fetchone()
-    connected = conn.execute('SELECT * FROM connected').fetchall()
-    
-    return jsonify({
-        'streams': [dict(row) for row in streams],
-        'reflector': dict(reflector) if reflector else None,
-        'connected': [dict(row) for row in connected]
-    })
+    try:
+        conn = get_db_connection()
+        
+        streams = conn.execute(
+            'SELECT * FROM streams ORDER BY date_time DESC LIMIT 100'
+        ).fetchall()
+        
+        reflector = conn.execute(
+            'SELECT * FROM reflector ORDER BY date_time DESC LIMIT 1'
+        ).fetchone()
+        
+        connected = conn.execute(
+            'SELECT * FROM connected ORDER BY call'
+        ).fetchall()
+        
+        blocked = conn.execute(
+            'SELECT * FROM blocked ORDER BY time DESC'
+        ).fetchall()
+        
+        conn.close()
+        
+        return jsonify({
+            'streams': [dict(row) for row in streams],
+            'reflector': dict(reflector) if reflector else None,
+            'connected': [dict(row) for row in connected],
+            'blocked': [dict(row) for row in blocked],
+            'status': 'ok'
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/health')
+def health_check():
+    return jsonify({'status': 'ok', 'database_exists': os.path.exists(DB_PATH)})
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001)
+    app.run(host='0.0.0.0', port=5001, debug=False)
 ```
+
+Instalar dependencias y ejecutar:
+```bash
+sudo pip3 install flask flask-cors --break-system-packages
+python3 /opt/pysfreflector/api_server.py &
+```
+
+Servicio systemd para la API Flask (`/etc/systemd/system/pysf3-api.service`):
+```ini
+[Unit]
+Description=pYSF3 Dashboard API
+After=network.target collector3.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/pysfreflector
+ExecStart=/usr/bin/python3 /opt/pysfreflector/api_server.py
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+```
+
+### Paso 3: Configurar el Dashboard para Tiempo Real
+
+Editar `client/src/pages/dashboard.tsx` y cambiar las variables de configuración:
+
+```typescript
+// Cambiar estas líneas al inicio del archivo:
+const API_URL = 'http://tu-servidor.com/api.php'; // o '/api/dashboard' para Flask
+const USE_MOCK_DATA = false; // Cambiar a false para usar datos reales
+```
+
+También necesitas añadir el código de fetch. Añadir este hook después de las variables de configuración:
+
+```typescript
+import { useState, useEffect } from 'react';
+
+// Dentro del componente Dashboard:
+const [streams, setStreams] = useState<QSOStream[]>(mockQSOData);
+const [linked, setLinked] = useState<LinkedStation[]>(mockLinkedData);
+const [blocked, setBlocked] = useState<BlockedStation[]>(mockBlockedData);
+const [reflector, setReflector] = useState<ReflectorInfo>(mockReflectorInfo);
+
+useEffect(() => {
+  if (USE_MOCK_DATA) return;
+  
+  const fetchData = async () => {
+    try {
+      const response = await fetch(API_URL);
+      const data = await response.json();
+      
+      if (data.streams) setStreams(data.streams);
+      if (data.connected) setLinked(data.connected);
+      if (data.blocked) setBlocked(data.blocked);
+      if (data.reflector) setReflector(data.reflector);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+  
+  fetchData();
+  const interval = setInterval(fetchData, 60000); // Actualizar cada 60 segundos
+  
+  return () => clearInterval(interval);
+}, []);
+```
+
+### Paso 4: Verificar la Conexión
+
+1. Verificar que collector3.py está corriendo:
+```bash
+systemctl status collector3
+```
+
+2. Verificar que la base de datos tiene datos:
+```bash
+sqlite3 /opt/pysfreflector/collector3.db "SELECT COUNT(*) FROM streams;"
+```
+
+3. Probar la API:
+```bash
+curl http://localhost/api.php
+# o para Flask:
+curl http://localhost:5001/api/dashboard
+```
+
+4. Abrir el dashboard en el navegador y verificar que muestra datos reales.
+
+### Configuración de CORS (si es necesario)
+
+Si el dashboard está en un dominio diferente a la API, asegúrate de que CORS está configurado correctamente.
+
+Para Nginx, añadir en la configuración del servidor:
+```nginx
+location /api.php {
+    add_header 'Access-Control-Allow-Origin' '*';
+    add_header 'Access-Control-Allow-Methods' 'GET, OPTIONS';
+    add_header 'Access-Control-Allow-Headers' 'Content-Type';
+}
+```
+
+### Frecuencia de Actualización
+
+Por defecto, el dashboard se actualiza cada 60 segundos. Puedes cambiar esto modificando el intervalo:
+
+```typescript
+const interval = setInterval(fetchData, 30000); // Actualizar cada 30 segundos
+```
+
+**Nota**: No uses intervalos menores a 10 segundos para evitar sobrecargar el servidor
 
 ## Estructura del Proyecto
 
