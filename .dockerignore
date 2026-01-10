@@ -1,0 +1,13 @@
+node_modules
+dist
+.git
+.gitignore
+*.md
+.env*
+.DS_Store
+Thumbs.db
+docker/
+config/
+*.log
+.replit
+replit.nix

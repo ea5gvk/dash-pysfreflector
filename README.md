@@ -16,12 +16,201 @@ Dashboard moderno y responsive para visualizar la actividad de un reflector C4FM
 ## Requisitos del Sistema
 
 - **Sistema Operativo:** Debian 11/12 o Ubuntu 20.04/22.04
-- **Node.js:** v18.x o superior
-- **npm:** v9.x o superior
+- **Node.js:** v18.x o superior (para instalación manual)
+- **Docker:** v20.x o superior (para instalación con Docker)
 - **RAM:** 512 MB mínimo
 - **Disco:** 500 MB espacio libre
 
-## Instalación en Debian
+---
+
+## Instalación con Docker (Recomendado)
+
+La forma más fácil de instalar todo el sistema es usando Docker Compose. Incluye:
+- **pYSFReflector3** - El reflector C4FM
+- **collector3** - Recolector de datos
+- **API** - Servidor JSON para el dashboard
+- **Dashboard** - Interfaz web React
+
+### Estructura de archivos de configuración
+
+```
+config/
+├── pysfreflector.ini    # Configuración del reflector
+├── collector3.ini       # Configuración del collector
+├── dashboard.json       # Configuración del dashboard
+├── dgid.db              # Descripciones de DGID
+├── white.db             # Lista blanca de callsigns
+├── black.db             # Lista negra de callsigns
+└── YSFHosts.txt         # Hosts YSF
+```
+
+### 1. Instalar Docker y Docker Compose
+
+```bash
+# Instalar Docker
+curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker $USER
+
+# Instalar Docker Compose
+sudo apt install -y docker-compose-plugin
+
+# Cerrar sesión y volver a entrar para aplicar grupo docker
+```
+
+### 2. Clonar el repositorio
+
+```bash
+cd /opt
+sudo git clone https://github.com/TU_USUARIO/pysf3-dashboard.git
+sudo chown -R $USER:$USER pysf3-dashboard
+cd pysf3-dashboard
+```
+
+### 3. Configurar el reflector
+
+Editar `config/pysfreflector.ini`:
+
+```ini
+[YSFReflector3]
+REF_ID=11111              # Tu ID de reflector
+REF_NAME=MyReflector      # Nombre del reflector
+REF_DESC=C4FM Reflector   # Descripción
+REFLECTOR_PORT=42000      # Puerto UDP
+
+[Json]
+JSON_PORT=42223           # Puerto para collector
+JSON_BIND=0.0.0.0
+
+[APRS]
+APRS_EN=True              # Habilitar APRS
+APRS_SERVER=euro.aprs2.net
+APRS_PORT=14580
+APRS_SSID=7
+APRS_PASSCODE=0           # Tu passcode APRS
+
+[Admin]
+ADMIN_ENABLED=True
+ADMIN_PASSWORD=admin123   # Cambiar en producción!
+
+[DGID]
+DGID_DEFAULT=0
+DGID_LOCAL=1
+
+[Contact]
+CONTACT=admin@example.com
+WEB=https://example.com
+```
+
+### 4. Configurar descripciones de DGID
+
+Editar `config/dgid.db`:
+
+```
+9,Local_reflector
+22,MP_Italia
+30,MP_Lazio
+# ... añadir tus DGIDs
+```
+
+### 5. Configurar listas de acceso (opcional)
+
+**Lista blanca** (`config/white.db`):
+```
+# Dejar vacío para permitir todos
+EA4XXX
+EA5YYY
+```
+
+**Lista negra** (`config/black.db`):
+```
+# Callsigns bloqueados
+BADCALL
+```
+
+### 6. Iniciar todos los servicios
+
+```bash
+docker compose up -d
+```
+
+### 7. Verificar que todo funciona
+
+```bash
+# Ver estado de los contenedores
+docker compose ps
+
+# Ver logs
+docker compose logs -f
+
+# Ver logs de un servicio específico
+docker compose logs -f ysfreflector
+docker compose logs -f collector
+docker compose logs -f api
+docker compose logs -f dashboard
+```
+
+### 8. Acceder al dashboard
+
+Abrir en el navegador: `http://TU_IP:8080`
+
+### Comandos Docker útiles
+
+```bash
+# Parar todos los servicios
+docker compose down
+
+# Reiniciar un servicio
+docker compose restart ysfreflector
+
+# Actualizar imágenes y reiniciar
+docker compose pull
+docker compose up -d --build
+
+# Ver uso de recursos
+docker stats
+
+# Limpiar volúmenes (¡borra la base de datos!)
+docker compose down -v
+```
+
+### Puertos expuestos
+
+| Servicio     | Puerto      | Descripción                    |
+|--------------|-------------|--------------------------------|
+| Reflector    | 42000/UDP   | Puerto principal del reflector |
+| Collector    | 42223       | Puerto JSON para collector     |
+| API          | 5001        | API REST para el dashboard     |
+| Dashboard    | 8080        | Interfaz web                   |
+
+### Modificar configuración sin reconstruir
+
+Los archivos en `config/` están montados como volúmenes. Para aplicar cambios:
+
+```bash
+# Reiniciar el servicio afectado
+docker compose restart ysfreflector   # Si cambias pysfreflector.ini
+docker compose restart collector      # Si cambias collector3.ini
+docker compose restart dashboard      # Si cambias dashboard.json
+```
+
+### Persistencia de datos
+
+Los datos se almacenan en volúmenes Docker:
+- `reflector-data` - Datos del reflector
+- `collector-db` - Base de datos SQLite
+
+Para backup:
+```bash
+# Backup de la base de datos
+docker compose exec collector cat /opt/collector/data/collector3.db > backup.db
+
+# O copiar directamente del volumen
+docker cp pysf3-collector:/opt/collector/data/collector3.db ./backup.db
+```
+
+---
+
+## Instalación Manual en Debian
 
 ### 1. Actualizar el sistema
 

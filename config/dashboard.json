@@ -1,0 +1,14 @@
+{
+  "apiUrl": "/api",
+  "refreshInterval": 60000,
+  "theme": "dark",
+  "title": "C4FM Reflector Dashboard",
+  "showBlocked": true,
+  "maxStreams": 100,
+  "features": {
+    "showFlags": true,
+    "showRadioModels": true,
+    "showCoordinates": true,
+    "showAprs": true
+  }
+}

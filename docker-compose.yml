@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  ysfreflector:
+    build:
+      context: ./docker/ysfreflector
+      dockerfile: Dockerfile
+    container_name: pysfreflector3
+    restart: unless-stopped
+    ports:
+      - "42000:42000/udp"
+      - "42223:42223"
+    volumes:
+      - ./config/pysfreflector.ini:/opt/pysfreflector/pysfreflector.ini:ro
+      - ./config/YSFHosts.txt:/opt/pysfreflector/YSFHosts.txt:ro
+      - ./config/dgid.db:/opt/pysfreflector/dgid.db:ro
+      - ./config/white.db:/opt/pysfreflector/white.db:ro
+      - ./config/black.db:/opt/pysfreflector/black.db:ro
+      - reflector-data:/opt/pysfreflector/data
+    networks:
+      - ysf-network
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "ysfreflector3"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  collector:
+    build:
+      context: ./docker/collector
+      dockerfile: Dockerfile
+    container_name: pysf3-collector
+    restart: unless-stopped
+    depends_on:
+      ysfreflector:
+        condition: service_healthy
+    volumes:
+      - ./config/collector3.ini:/opt/collector/collector3.ini:ro
+      - collector-db:/opt/collector/data
+    environment:
+      - REFLECTOR_HOST=ysfreflector
+      - REFLECTOR_PORT=42223
+      - DB_PATH=/opt/collector/data/collector3.db
+    networks:
+      - ysf-network
+
+  api:
+    build:
+      context: ./docker/api
+      dockerfile: Dockerfile
+    container_name: pysf3-api
+    restart: unless-stopped
+    depends_on:
+      - collector
+    ports:
+      - "5001:5001"
+    volumes:
+      - collector-db:/opt/collector/data:ro
+    environment:
+      - DB_PATH=/opt/collector/data/collector3.db
+      - API_PORT=5001
+    networks:
+      - ysf-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pysf3-dashboard
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+    volumes:
+      - ./config/dashboard.json:/usr/share/nginx/html/config.json:ro
+    environment:
+      - API_URL=http://api:5001
+    networks:
+      - ysf-network
+
+volumes:
+  reflector-data:
+    driver: local
+  collector-db:
+    driver: local
+
+networks:
+  ysf-network:
+    driver: bridge

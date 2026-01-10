@@ -1,0 +1,4 @@
+# YSF Hosts file
+# Format: Reflector_ID;Reflector_Name;Reflector_Description;IP_Address;Port
+# Example:
+# 12345;IT MyRef;My Italian Reflector;192.168.1.100;42000

@@ -1,0 +1,5 @@
+# White list - Callsigns permitidos
+# Formato: CALLSIGN,IP (opcional)
+# Dejar vacío para permitir todos
+# Ejemplo:
+# EA4XXX,192.168.1.100
