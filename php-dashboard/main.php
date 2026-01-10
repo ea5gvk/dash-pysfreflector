@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta http-equiv="refresh" content="5"/>
+    <meta http-equiv="refresh" content="10"/>
     <title>pYSF3 C4FM Reflector - QSO Traffic</title>
     <meta name="author" content="ADN Systems Spain">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -371,7 +371,7 @@
         <h1 class="page-title">QSO Traffic</h1>
         <div class="live-badge">
             <span class="live-dot"></span>
-            LIVE - Auto-refresh 5s
+            LIVE - Auto-refresh 10s
         </div>
     </div>
 
